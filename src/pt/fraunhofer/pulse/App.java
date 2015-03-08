@@ -1,20 +1,24 @@
 package pt.fraunhofer.pulse;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.util.EntityUtils;
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.MyCameraBridgeViewBase;
@@ -31,19 +35,24 @@ import pt.fraunhofer.pulse.view.BpmView;
 import pt.fraunhofer.pulse.view.PulseView;
 import android.app.Activity;
 import android.app.Dialog;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Typeface;
 import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.WindowManager;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -313,10 +322,12 @@ public class App extends Activity implements CvCameraViewListener {
 			}
 			mResultDialog.setTitle(String.format(
 					getString(R.string.average_bpm), (int) recordedBpmAverage));
+
 			if (!mResultDialog.isShowing())
 				mResultDialog.show();
 
 			TextView textView = ((TextView) mResultDialog.findViewById(R.id.tv));
+			textView.setOnClickListener(null);
 
 			if (mPlayer != null && mPlayer.isPlaying())
 				mPlayer.stop();
@@ -548,14 +559,30 @@ public class App extends Activity implements CvCameraViewListener {
 				StringEntity str = new StringEntity(payload);
 				post.setEntity(str);
 				HttpResponse response = httpClient.execute(post);
+
 				final String respo = response.getStatusLine().toString();
+				HttpEntity entity = response.getEntity();
+				final String result = EntityUtils.toString(entity);
+				Log.d(TAG, "[lynn] response = " + response);
+				Log.d(TAG, "[lynn] entity = " + entity);
+				Log.d(TAG, "[lynn] respo = " + respo);
+				Log.d(TAG, "[lynn] result = " + result);
+
 				runOnUiThread(new Runnable() {
 
 					@Override
 					public void run() {
 						// TODO Auto-generated method stub
-						Toast.makeText(getApplicationContext(), respo,
+						Toast.makeText(getApplicationContext(), result,
 								Toast.LENGTH_SHORT).show();
+
+						Log.d(TAG, "[lynn] result = " + result);
+						if (mResultDialog != null && mResultDialog.isShowing()) {
+							TextView textView = ((TextView) mResultDialog
+									.findViewById(R.id.tv));
+							textView.setTag(result);
+							textView.setOnClickListener(onClickListener);
+						}
 					}
 				});
 			} catch (UnsupportedEncodingException e) {
@@ -570,5 +597,29 @@ public class App extends Activity implements CvCameraViewListener {
 			}
 
 		}
+
 	}
+
+	private OnClickListener onClickListener = new OnClickListener() {
+
+		@Override
+		public void onClick(View v) {
+			String result = (String) v.getTag();
+			if (result != null)
+				watchYoutubeVideo(result);
+		}
+
+		private void watchYoutubeVideo(String id) {
+			try {
+
+				Intent intent = new Intent(Intent.ACTION_VIEW,
+						Uri.parse("vnd.youtube:" + id));
+				startActivity(intent);
+			} catch (ActivityNotFoundException ex) {
+				Intent intent = new Intent(Intent.ACTION_VIEW,
+						Uri.parse("http://www.youtube.com/watch?v=" + id));
+				startActivity(intent);
+			}
+		}
+	};
 }
