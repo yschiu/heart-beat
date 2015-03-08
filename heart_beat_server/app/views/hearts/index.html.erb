@@ -1,0 +1,31 @@
+<nav class="navbar navbar-default">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="#">
+        <div id="heart">Heart Beats</div> 
+      </a>
+    </div>
+  </div>
+</nav>
+<div class="container">
+<table>
+  <table class="table table-striped">
+    <tr>
+      <th>Device Name:</th>
+      <th>Beat:</th>
+      <th colspan="3"></th>
+    </tr>
+
+    <% @hearts.each do |heart| %>
+      <tr>
+        <td><%= heart.name %></td>
+        <td><%= heart.beats.to_i %></td>
+        <td><%= link_to 'View Detail', heart, {:class => 'btn btn-default'} %></td>
+        <!-- <td><%= link_to 'Edit', edit_heart_path(heart) %></td>
+        <td><%= link_to 'Destroy', heart, method: :delete, data: { confirm: 'Are you sure?' } %></td> -->
+      </tr>
+    <% end %>
+  </table>
+</table>
+</div>
+<br>
