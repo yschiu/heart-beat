@@ -13,5 +13,5 @@
     <string name="done">Done</string>
 
     <!-- Bpm Dialog -->
-    <string name="average_bpm">Average BPM</string>
+    <string name="average_bpm">Result: %d beat/min</string>
 </resources>
